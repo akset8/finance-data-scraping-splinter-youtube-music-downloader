@@ -3,7 +3,7 @@ import urllib2
 import os
 import time
 import smtplib
-import yagmail
+
 
 ##mail wala code already hai mere paas 
 
@@ -75,17 +75,17 @@ while(True):
 	#soup1 =bs4.BeautifulSoup(html_doc1, 'html.parser') #google wala 
 
 	print "SGX NIFTY  ",
-	s+="SGX NIFTY  "
+	s+="SGX NIFTY  \n"
 	x1= soup2.find("td",class_="indexprice")
 	x2= soup2.find("td",class_="indexchange")
 	print x1.get_text(),
 	s+=x1.get_text()
 	if(x2.get_text()[0]=="+"):
 		print "   UP BY",
-		s+="   UP BY"
+		s+="   up by"
 	else:
 		print "   DOWN BY",
-		s+="   DOWN BY"
+		s+="   down by"
 
 	print "   ",x2.get_text()[1:]," pts"
 	s+="   "+x2.get_text()[1:]+"  pts\n\n"
@@ -199,7 +199,7 @@ while(True):
 	# s.sendmail(me, [you], msg.as_string())
 	# s.quit()
 
-	send_email('ccakshay59@gmail.com', '9313501562','techwave50@gmail.com','stock prices', s )
+	send_email('ccakshay59@gmail.com', '9313501562',['techwave50@gmail.com','akshay14133@iiitd.ac.in'],'stock prices', s )
 
 
 
