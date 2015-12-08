@@ -2,23 +2,57 @@ import bs4
 import urllib2 
 import os
 import time
+import smtplib
+import yagmail
+
+##mail wala code already hai mere paas 
+
+from email.mime.text import MIMEText
+
+def send_email(user, pwd, recipient, subject, body):
+    
+
+    gmail_user = user
+    gmail_pwd = pwd
+    FROM = user
+    TO = recipient if type(recipient) is list else [recipient]
+    SUBJECT = subject
+    TEXT = body
+
+    # Prepare actual message
+    message = """\From: %s\nTo: %s\nSubject: %s\n\n%s
+    """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+    
+    server_ssl = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+    server_ssl.ehlo() 
+    server_ssl.login(gmail_user, gmail_pwd)  
+    server_ssl.sendmail(FROM, TO, message)
+
+    server_ssl.close()
+    
+    print "hello"
+   
+
+
 
 
 os.system("rm -rf *.txt")
 
-sleep_setting = 0.1   ##value in minutes 
+sleep_setting = 60  ##value in minutes 
 
-urls =["https://in.finance.yahoo.com/q?s=^N225&ql=1",
-"https://in.finance.yahoo.com/q?s=%5EHSI&ql=0",
-"https://in.finance.yahoo.com/q?s=%5ESSEC",
-"https://in.finance.yahoo.com/q?s=%5EFTSE&ql=0",
-"https://in.finance.yahoo.com/q?s=%5EFCHI",
-"https://in.finance.yahoo.com/q?s=%5EGDAXI",
-"https://in.finance.yahoo.com/q?s=%5EDJI&ql=0",
-"https://in.finance.yahoo.com/q?s=%5EIXIC"
+urls =[["https://in.finance.yahoo.com/q?s=^N225&ql=1","https://www.google.com/finance?q=INDEXNIKKEI%3ANI225&ei=Sv0RVtnuF4u1ugT-sY1I"],
+
+["https://in.finance.yahoo.com/q?s=%5EHSI&ql=0","https://www.google.com/finance?q=INDEXHANGSENG%3AHSI&ei=8BgSVuCJHMamuATMgp9Y"],
+["https://in.finance.yahoo.com/q?s=%5ESSEC","https://www.google.com/finance?q=SHA%3A000001&ei=6hkSVsnQB4jxugSXyZCIBQ"],
+["https://in.finance.yahoo.com/q?s=%5EFTSE&ql=0","https://www.google.com/finance?q=INDEXFTSE%3AUKX&ei=DhoSVuGPGsv2ugSkor1Q"],
+["https://in.finance.yahoo.com/q?s=%5EFCHI","https://www.google.com/finance?q=INDEXEURO%3APX1&ei=DhoSVuGPGsv2ugSkor1Q"],
+["https://in.finance.yahoo.com/q?s=%5EGDAXI","https://www.google.com/finance?q=INDEXDB%3ADAX&ei=lhoSVpGsNdOhuATtr6CADA"],
+["https://in.finance.yahoo.com/q?s=%5EDJI&ql=0","https://www.google.com/finance?q=INDEXDJX%3A.DJI&ei=lhoSVpGsNdOhuATtr6CADA"],
+["https://in.finance.yahoo.com/q?s=%5EIXIC","https://www.google.com/finance?q=INDEXNASDAQ%3A.IXIC&ei=0hoSVtmqBM6auATm-q-YAQ"]
+
 ]
 
-
+urls2 = 'http://sgxnifty.org/'
 
 count = 0
 
@@ -26,31 +60,61 @@ count = 0
 
 while(True):
 
-	f=open(str(count)+".txt","w")
+	
 	count=count+1;
 	s=""
-	f.write("Dear Sir,\n\n")
+	s+="Dear Sir,\n\n"
+	
+
+
+	html_doc2=urllib2.urlopen(urls2)
+	#html_doc1=urllib2.urlopen(urls[i][1])
+
+	soup2 = bs4.BeautifulSoup(html_doc2, 'html.parser')  #yahoo wala
+
+	#soup1 =bs4.BeautifulSoup(html_doc1, 'html.parser') #google wala 
+
+	print "SGX NIFTY  ",
+	s+="SGX NIFTY  "
+	x1= soup2.find("td",class_="indexprice")
+	x2= soup2.find("td",class_="indexchange")
+	print x1.get_text(),
+	s+=x1.get_text()
+	if(x2.get_text()[0]=="+"):
+		print "   UP BY",
+		s+="   UP BY"
+	else:
+		print "   DOWN BY",
+		s+="   DOWN BY"
+
+	print "   ",x2.get_text()[1:]," pts"
+	s+="   "+x2.get_text()[1:]+"  pts\n\n"
+
+
 	for i in range(len(urls)):
 
 
-		html_doc=urllib2.urlopen(urls[i])
+		html_doc=urllib2.urlopen(urls[i][0])
+		html_doc1=urllib2.urlopen(urls[i][1])
 
-		soup = bs4.BeautifulSoup(html_doc, 'html.parser')
-		w=soup.find(attrs={'id':"yfs_market_time"})
+		soup = bs4.BeautifulSoup(html_doc, 'html.parser')  #yahoo wala
+
+		soup1 =bs4.BeautifulSoup(html_doc1, 'html.parser') #google wala 
+
+		
+
+		w=soup1.find(attrs={'id':"price-panel"})
+		
+		
 
 		#d =datetime.datetime.now().time()
 		#<span id="yfs_market_time">Sat, Oct  3, 2015, 10:03AM EDT - <b>US Markets are closed</b></span>
 		#print w.get_text();
 		#print w.get_text().find("up")
 
-		r=soup.find(attrs={'class':"time_rtq"})
-		r=r.get_text()
-		r=r.split(" ")
-		for i in range(len(r)):
-			r[i]=r[i].encode("utf8")
-		print r
+		
 
-		if(w.get_text().find("close")==-1):
+		if(w.get_text().encode('utf8').find("Close")==-1):
 
 			a=soup.find(attrs={'class':"title"})
 			print a.get_text()
@@ -102,7 +166,51 @@ while(True):
 			
 
 	#print s
-	f.write(s)
-	f.write("\nRegards,\nTeam Mastertrust")
+
+	s+="\nRegards,\nTeam Mastertrust"
 	
+	
+
+	print s
+	##the email portion here do that
+
+
+
+
+
+# Open a plain text file for reading.  For this example, assume that
+# the text file contains only ASCII characters.
+#fp = open(textfile, 'rb')
+# Create a text/plain message
+	# msg = MIMEText(s)
+
+
+	# # me == the sender's email address
+	# # you == the recipient's email address
+	# me = "akshay14133@iiitd.ac.in"
+	# you ="creativecreationsvikaspuri@gmail.com"
+
+	# msg['Subject'] = 'market current rates'
+	# msg['From'] = me
+	# msg['To'] = you
+
+	
+	# s = smtplib.SMTP('localhost')
+	# s.sendmail(me, [you], msg.as_string())
+	# s.quit()
+
+	send_email('ccakshay59@gmail.com', '9313501562','techwave50@gmail.com','stock prices', s )
+
+
+
 	time.sleep(60*sleep_setting)
+
+
+	
+
+
+#somehow get the emailing to work properly 
+#sleep the code so that it wakes up after a given predefined 
+
+
+
